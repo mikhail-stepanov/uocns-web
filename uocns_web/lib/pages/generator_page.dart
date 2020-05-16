@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:uocns_web/global/custom_colors.dart';
 import 'package:uocns_web/global/globals.dart';
 import 'package:uocns_web/global/size_config.dart';
 import 'package:uocns_web/header/bottom.dart';
 import 'package:uocns_web/header/header.dart';
+
+import 'package:http/http.dart' as http;
+import 'package:uocns_web/popups/info_popup.dart';
 
 class GeneratorPage extends StatefulWidget {
   GeneratorPage({Key key, this.title}) : super(key: key);
@@ -19,8 +21,6 @@ class _GeneratorPageState extends State<GeneratorPage> {
   String topologyType = 'mesh';
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _columnsController = TextEditingController();
-  final TextEditingController _injectionRateController =
-      TextEditingController();
   final TextEditingController _rowsController = TextEditingController();
   final TextEditingController _nodeController = TextEditingController();
   final TextEditingController _resultController = TextEditingController();
@@ -31,7 +31,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
     SizeConfig().init(context);
 
     return Scaffold(
-      backgroundColor: CustomColors.main_light,
+      backgroundColor: CustomColors.background,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -40,13 +40,14 @@ class _GeneratorPageState extends State<GeneratorPage> {
           SizedBox(height: SizeConfig.height(4)),
           Container(
             padding: EdgeInsets.only(
-                left: SizeConfig.width(42), right: SizeConfig.width(13)),
+                left: SizeConfig.width(44), right: SizeConfig.width(13)),
             child: Text(
               'XML Generator',
               textAlign: TextAlign.center,
               style: TextStyle(
+                  fontFamily: "Bebas_Neue",
                   fontSize: SizeConfig.height(5),
-                  color: CustomColors.fisk_eyes),
+                  color: CustomColors.simulator_main),
             ),
           ),
           SizedBox(height: SizeConfig.height(3)),
@@ -60,7 +61,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: SizeConfig.height(3),
-                      color: CustomColors.text_grey),
+                      color: CustomColors.generator_main),
                 ),
               ),
               Container(
@@ -71,11 +72,12 @@ class _GeneratorPageState extends State<GeneratorPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: SizeConfig.height(3),
-                      color: CustomColors.text_grey),
+                      color: CustomColors.generator_main),
                 ),
               ),
             ],
           ),
+          SizedBox(height: SizeConfig.height(1)),
           Row(
             children: <Widget>[
               Column(
@@ -84,17 +86,40 @@ class _GeneratorPageState extends State<GeneratorPage> {
                       padding: EdgeInsets.only(
                           left: SizeConfig.width(25),
                           right: SizeConfig.width(13)),
+                      child: FlatButton(
+                          color: Colors.transparent,
+                          hoverColor: CustomColors.button_hover,
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                    opaque: false,
+                                    pageBuilder:
+                                        (BuildContext context, _, __) =>
+                                            InfoPopup()));
+                          },
+                          child: Text(
+                            'parameters guide',
+                            style: TextStyle(
+                                fontSize: SizeConfig.height(1.5),
+                                color: CustomColors.generator_main),
+                          ))),
+                  Container(
+                      padding: EdgeInsets.only(
+                          left: SizeConfig.width(25),
+                          right: SizeConfig.width(13)),
                       child: DropdownButton<String>(
+                        dropdownColor: CustomColors.black,
                         value: topologyType,
                         icon: Icon(Icons.arrow_downward),
-                        iconSize: 30,
+                        iconSize: 20,
                         elevation: 0,
                         style: TextStyle(
-                          color: CustomColors.text_grey,
+                          color: CustomColors.simulator_dark,
                         ),
                         underline: Container(
                           height: 2,
-                          color: CustomColors.fisk_eyes,
+                          color: CustomColors.simulator_main,
                         ),
                         onChanged: (String newValue) {
                           setState(() {
@@ -113,142 +138,135 @@ class _GeneratorPageState extends State<GeneratorPage> {
                           );
                         }).toList(),
                       )),
+                  SizedBox(height: SizeConfig.height(1)),
                   Container(
                       height: SizeConfig.height(4.0),
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _nameController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'name',
-                          fillColor: CustomColors.main_light,
+                          fillColor: CustomColors.background,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
                           filled: true,
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
                       )),
-                  SizedBox(height: SizeConfig.height(0.5)),
+                  SizedBox(height: SizeConfig.height(1)),
                   Container(
                       height: SizeConfig.height(4.0),
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _descriptionController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'description',
-                          fillColor: CustomColors.main_light,
+                          fillColor: CustomColors.background,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
                           filled: true,
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
                       )),
-                  SizedBox(height: SizeConfig.height(0.5)),
+                  SizedBox(height: SizeConfig.height(1)),
                   Container(
                       height: SizeConfig.height(4.0),
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
-                        controller: _injectionRateController,
-                        decoration: new InputDecoration(
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
-                          ),
-                          hintText: 'injection rate',
-                          fillColor: CustomColors.main_light,
-                          filled: true,
-                          contentPadding:
-                              new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
-                        ),
-                        style: TextStyle(
-                            fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
-                      )),
-                  SizedBox(height: SizeConfig.height(0.5)),
-                  Container(
-                      height: SizeConfig.height(4.0),
-                      width: SizeConfig.width(22),
-                      padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
-                      child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _rowsController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'rows',
-                          fillColor: CustomColors.main_light,
+                          fillColor: CustomColors.background,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
                           filled: true,
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
                       )),
-                  SizedBox(height: SizeConfig.height(0.5)),
+                  SizedBox(height: SizeConfig.height(1)),
                   Container(
                       height: SizeConfig.height(4.0),
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _columnsController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'columns',
-                          fillColor: CustomColors.main_light,
+                          fillColor: CustomColors.background,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
                           filled: true,
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
                       )),
-                  SizedBox(height: SizeConfig.height(0.5)),
+                  SizedBox(height: SizeConfig.height(1)),
                   Container(
                       height: SizeConfig.height(4.0),
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _nodeController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'nodes',
-                          fillColor: CustomColors.main_light,
+                          fillColor: CustomColors.background,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
                           filled: true,
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
                       )),
                   SizedBox(height: SizeConfig.height(4)),
                   Container(
@@ -256,14 +274,14 @@ class _GeneratorPageState extends State<GeneratorPage> {
                       width: SizeConfig.width(26),
                       padding: EdgeInsets.only(left: SizeConfig.width(13)),
                       child: FloatingActionButton(
-                        backgroundColor: CustomColors.fisk_eyes,
+                        backgroundColor: CustomColors.black,
                         onPressed: () {
                           fetchData();
                         },
                         child: Text(
-                          'start simulation',
+                          'start generation',
                           style: TextStyle(
-                            color: CustomColors.main_light,
+                            color: CustomColors.generator_main,
                             fontSize: SizeConfig.height(2.5),
                           ),
                         ),
@@ -274,33 +292,36 @@ class _GeneratorPageState extends State<GeneratorPage> {
                 ],
               ),
               Container(
-                  height: SizeConfig.height(40.0),
-                  width: SizeConfig.width(40),
+                  height: SizeConfig.height(50.0),
+                  width: SizeConfig.width(45),
                   padding: EdgeInsets.only(
                       left: SizeConfig.width(3), right: SizeConfig.width(5)),
                   child: TextField(
                     keyboardType: TextInputType.multiline,
                     maxLines: null,
-                    cursorColor: CustomColors.fisk_eyes,
+                    cursorColor: CustomColors.simulator_main,
                     controller: _resultController,
                     decoration: new InputDecoration(
                       focusedBorder: UnderlineInputBorder(
-                        borderSide:
-                            BorderSide(color: CustomColors.fisk_eyes, width: 2),
+                        borderSide: BorderSide(
+                            color: CustomColors.simulator_main, width: 2),
                       ),
-                      hintText: 'please waiting about 1-2 minute for result',
-                      fillColor: CustomColors.main_light,
+                      hintText: 'result will be here',
+                      hintStyle: TextStyle(
+                          fontSize: SizeConfig.height(2),
+                          color: CustomColors.generator_main),
+                      fillColor: CustomColors.black,
                       filled: true,
                       contentPadding:
                           new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                     ),
                     style: TextStyle(
                         fontSize: SizeConfig.height(2),
-                        color: CustomColors.main_dark),
+                        color: CustomColors.generator_main),
                   )),
             ],
           ),
-          SizedBox(height: SizeConfig.height(15)),
+          SizedBox(height: SizeConfig.height(11.5)),
           Container(
               padding: EdgeInsets.only(bottom: SizeConfig.height(0)),
               child: Bottom()),
@@ -312,11 +333,9 @@ class _GeneratorPageState extends State<GeneratorPage> {
   fetchData() async {
     String name = _nameController.text;
     String description = _descriptionController.text;
-    String destInjectionRate = _injectionRateController.text;
     String columns = _columnsController.text;
     String rows = _rowsController.text;
-    String nodes = _resultController.text;
-
+    String nodes = _nodeController.text;
     final res = await http.post(Globals.host + '/xml/' + topologyType,
         headers: {
           'Accept': 'application/json; charset=utf-8',
@@ -325,17 +344,13 @@ class _GeneratorPageState extends State<GeneratorPage> {
         body: jsonEncode({
           'name': name,
           'description': description,
-          'destInjectionRate': double.parse(destInjectionRate),
           'columns': int.parse(columns),
           'rows': int.parse(rows),
           'nodes': int.parse(nodes)
         }));
-
     if (res.statusCode == 200) {
       var v = json.decode(res.body);
-      setState(() {
-        _resultController.text = v['content'];
-      });
+      _resultController.text = v['content'];
     }
   }
 }

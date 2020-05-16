@@ -13,7 +13,7 @@ dependencies:
 
   cupertino_icons: ^0.1.3
   url_launcher: ^5.4.7
-  http: ^0.12.1
+  http: any
 
 dev_dependencies:
   flutter_test:
@@ -24,9 +24,13 @@ flutter:
   uses-material-design: true
 
   fonts:
-    - family: Poppins
+    - family: Bebas_Neue
       fonts:
-        - asset: assets/poppins/Poppins-Regular.ttf
+        - asset: assets/Bebas_Neue/BebasNeue-Regular.ttf
+
+    - family: Roboto
+      fonts:
+        - asset: assets/Roboto/Roboto-Regular.ttf
 
   assets:
     - assets/images/logo_hse.png

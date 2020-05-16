@@ -1,12 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:uocns_web/global/custom_colors.dart';
 import 'package:uocns_web/global/globals.dart';
 import 'package:uocns_web/global/size_config.dart';
 import 'package:uocns_web/header/bottom.dart';
 import 'package:uocns_web/header/header.dart';
-import 'package:http/http.dart' as http;
+import 'package:uocns_web/popups/info_popup.dart';
 
 class SimulatorPage extends StatefulWidget {
   SimulatorPage({Key key, this.title}) : super(key: key);
@@ -16,7 +17,7 @@ class SimulatorPage extends StatefulWidget {
 }
 
 class _SimulatorPageState extends State<SimulatorPage> {
-  String topologyType = 'Mesh';
+  String topologyType = 'mesh';
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _columnsController = TextEditingController();
   final TextEditingController _injectionRateController =
@@ -26,12 +27,17 @@ class _SimulatorPageState extends State<SimulatorPage> {
   final TextEditingController _resultController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
+  final TextEditingController _firstStepController = TextEditingController();
+  final TextEditingController _secondStepController = TextEditingController();
+
+  bool progressVisible = false;
+
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
 
     return Scaffold(
-      backgroundColor: CustomColors.main_light,
+      backgroundColor: CustomColors.background,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -45,8 +51,9 @@ class _SimulatorPageState extends State<SimulatorPage> {
               'Simulator',
               textAlign: TextAlign.center,
               style: TextStyle(
+                  fontFamily: "Bebas_Neue",
                   fontSize: SizeConfig.height(5),
-                  color: CustomColors.fisk_eyes),
+                  color: CustomColors.simulator_main),
             ),
           ),
           SizedBox(height: SizeConfig.height(3)),
@@ -60,7 +67,7 @@ class _SimulatorPageState extends State<SimulatorPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: SizeConfig.height(3),
-                      color: CustomColors.text_grey),
+                      color: CustomColors.generator_main),
                 ),
               ),
               Container(
@@ -71,7 +78,7 @@ class _SimulatorPageState extends State<SimulatorPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       fontSize: SizeConfig.height(3),
-                      color: CustomColors.text_grey),
+                      color: CustomColors.generator_main),
                 ),
               ),
             ],
@@ -84,17 +91,39 @@ class _SimulatorPageState extends State<SimulatorPage> {
                       padding: EdgeInsets.only(
                           left: SizeConfig.width(25),
                           right: SizeConfig.width(13)),
+                      child: FlatButton(
+                          color: Colors.transparent,
+                          hoverColor: CustomColors.button_hover,
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                    opaque: false,
+                                    pageBuilder:
+                                        (BuildContext context, _, __) =>
+                                        InfoPopup()));                          },
+                          child: Text(
+                            'parameters guide',
+                            style: TextStyle(
+                                fontSize: SizeConfig.height(1.5),
+                                color: CustomColors.generator_main),
+                          ))),
+                  Container(
+                      padding: EdgeInsets.only(
+                          left: SizeConfig.width(25),
+                          right: SizeConfig.width(13)),
                       child: DropdownButton<String>(
+                        dropdownColor: CustomColors.black,
                         value: topologyType,
                         icon: Icon(Icons.arrow_downward),
-                        iconSize: 30,
+                        iconSize: 20,
                         elevation: 0,
                         style: TextStyle(
-                          color: CustomColors.text_grey,
+                          color: CustomColors.simulator_dark,
                         ),
                         underline: Container(
                           height: 2,
-                          color: CustomColors.fisk_eyes,
+                          color: CustomColors.simulator_main,
                         ),
                         onChanged: (String newValue) {
                           setState(() {
@@ -102,10 +131,10 @@ class _SimulatorPageState extends State<SimulatorPage> {
                           });
                         },
                         items: <String>[
-                          'Mesh',
-                          'Torus',
-                          'Circulant',
-                          'Optimal Circulant'
+                          'mesh',
+                          'torus',
+                          'circulant',
+                          'circulant/optimal'
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -113,27 +142,31 @@ class _SimulatorPageState extends State<SimulatorPage> {
                           );
                         }).toList(),
                       )),
+                  SizedBox(height: SizeConfig.height(1)),
                   Container(
                       height: SizeConfig.height(4.0),
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _nameController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'name',
-                          fillColor: CustomColors.main_light,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
+                          fillColor: CustomColors.background,
                           filled: true,
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
                       )),
                   SizedBox(height: SizeConfig.height(0.5)),
                   Container(
@@ -141,22 +174,25 @@ class _SimulatorPageState extends State<SimulatorPage> {
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _descriptionController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'description',
-                          fillColor: CustomColors.main_light,
+                          fillColor: CustomColors.background,
                           filled: true,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
                       )),
                   SizedBox(height: SizeConfig.height(0.5)),
                   Container(
@@ -164,22 +200,25 @@ class _SimulatorPageState extends State<SimulatorPage> {
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _injectionRateController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'injection rate',
-                          fillColor: CustomColors.main_light,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
+                          fillColor: CustomColors.background,
                           filled: true,
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
                       )),
                   SizedBox(height: SizeConfig.height(0.5)),
                   Container(
@@ -187,22 +226,25 @@ class _SimulatorPageState extends State<SimulatorPage> {
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _rowsController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'rows',
-                          fillColor: CustomColors.main_light,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
+                          fillColor: CustomColors.background,
                           filled: true,
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
                       )),
                   SizedBox(height: SizeConfig.height(0.5)),
                   Container(
@@ -210,22 +252,25 @@ class _SimulatorPageState extends State<SimulatorPage> {
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _columnsController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'columns',
-                          fillColor: CustomColors.main_light,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
+                          fillColor: CustomColors.background,
                           filled: true,
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
                       )),
                   SizedBox(height: SizeConfig.height(0.5)),
                   Container(
@@ -233,22 +278,75 @@ class _SimulatorPageState extends State<SimulatorPage> {
                       width: SizeConfig.width(22),
                       padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
                       child: TextFormField(
-                        cursorColor: CustomColors.fisk_eyes,
+                        cursorColor: CustomColors.simulator_main,
                         controller: _nodeController,
                         decoration: new InputDecoration(
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                                color: CustomColors.fisk_eyes, width: 2),
+                                color: CustomColors.simulator_main, width: 2),
                           ),
                           hintText: 'nodes',
-                          fillColor: CustomColors.main_light,
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
+                          fillColor: CustomColors.background,
                           filled: true,
                           contentPadding:
                               new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                         ),
                         style: TextStyle(
                             fontSize: SizeConfig.height(2),
-                            color: CustomColors.main_dark),
+                            color: CustomColors.simulator_dark),
+                      )),
+                  Container(
+                      height: SizeConfig.height(4.0),
+                      width: SizeConfig.width(22),
+                      padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
+                      child: TextFormField(
+                        cursorColor: CustomColors.simulator_main,
+                        controller: _firstStepController,
+                        decoration: new InputDecoration(
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                                color: CustomColors.simulator_main, width: 2),
+                          ),
+                          hintText: 'first step',
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
+                          fillColor: CustomColors.background,
+                          filled: true,
+                          contentPadding:
+                              new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
+                        ),
+                        style: TextStyle(
+                            fontSize: SizeConfig.height(2),
+                            color: CustomColors.simulator_dark),
+                      )),
+                  Container(
+                      height: SizeConfig.height(4.0),
+                      width: SizeConfig.width(22),
+                      padding: EdgeInsets.only(left: SizeConfig.width(12.5)),
+                      child: TextFormField(
+                        cursorColor: CustomColors.simulator_main,
+                        controller: _secondStepController,
+                        decoration: new InputDecoration(
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                                color: CustomColors.simulator_main, width: 2),
+                          ),
+                          hintText: 'second step',
+                          hintStyle: TextStyle(
+                              fontSize: SizeConfig.height(2),
+                              color: CustomColors.simulator_dark),
+                          fillColor: CustomColors.background,
+                          filled: true,
+                          contentPadding:
+                              new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
+                        ),
+                        style: TextStyle(
+                            fontSize: SizeConfig.height(2),
+                            color: CustomColors.simulator_dark),
                       )),
                   SizedBox(height: SizeConfig.height(4)),
                   Container(
@@ -256,14 +354,14 @@ class _SimulatorPageState extends State<SimulatorPage> {
                       width: SizeConfig.width(26),
                       padding: EdgeInsets.only(left: SizeConfig.width(13)),
                       child: FloatingActionButton(
-                        backgroundColor: CustomColors.fisk_eyes,
+                        backgroundColor: CustomColors.black,
                         onPressed: () {
                           fetchData();
                         },
                         child: Text(
                           'start simulation',
                           style: TextStyle(
-                            color: CustomColors.main_light,
+                            color: CustomColors.generator_main,
                             fontSize: SizeConfig.height(2.5),
                           ),
                         ),
@@ -274,33 +372,48 @@ class _SimulatorPageState extends State<SimulatorPage> {
                 ],
               ),
               Container(
-                  height: SizeConfig.height(40.0),
-                  width: SizeConfig.width(40),
+                  height: SizeConfig.height(50.0),
+                  width: SizeConfig.width(45),
                   padding: EdgeInsets.only(
                       left: SizeConfig.width(3), right: SizeConfig.width(5)),
                   child: TextField(
                     keyboardType: TextInputType.multiline,
                     maxLines: null,
-                    cursorColor: CustomColors.fisk_eyes,
+                    cursorColor: CustomColors.simulator_main,
                     controller: _resultController,
                     decoration: new InputDecoration(
                       focusedBorder: UnderlineInputBorder(
-                        borderSide:
-                            BorderSide(color: CustomColors.fisk_eyes, width: 2),
+                        borderSide: BorderSide(
+                            color: CustomColors.simulator_main, width: 2),
                       ),
                       hintText: 'please waiting about 1-2 minute for result',
-                      fillColor: CustomColors.main_light,
+                      hintStyle: TextStyle(
+                          fontSize: SizeConfig.height(2),
+                          color: CustomColors.generator_main),
+                      fillColor: CustomColors.black,
                       filled: true,
                       contentPadding:
                           new EdgeInsets.fromLTRB(1.0, 0.0, 0.0, 0.0),
                     ),
                     style: TextStyle(
                         fontSize: SizeConfig.height(2),
-                        color: CustomColors.main_dark),
+                        color: CustomColors.generator_main),
                   )),
             ],
           ),
-          SizedBox(height: SizeConfig.height(15)),
+          SizedBox(height: SizeConfig.height(3)),
+          Container(
+            height: SizeConfig.height(2.0),
+            padding: EdgeInsets.only(
+                left: SizeConfig.width(50), right: SizeConfig.width(13)),
+            child: Visibility(
+              child: LinearProgressIndicator(
+                backgroundColor: CustomColors.simulator_dark,
+              ),
+              visible: progressVisible,
+            ),
+          ),
+          SizedBox(height: SizeConfig.height(1.2)),
           Container(
               padding: EdgeInsets.only(bottom: SizeConfig.height(0)),
               child: Bottom()),
@@ -310,14 +423,28 @@ class _SimulatorPageState extends State<SimulatorPage> {
   }
 
   fetchData() async {
+    setState(() {
+      progressVisible = true;
+    });
     String name = _nameController.text;
     String description = _descriptionController.text;
     String destInjectionRate = _injectionRateController.text;
     String columns = _columnsController.text;
-    String rows = _rowsController.text;
-    String nodes = _resultController.text;
+    if (columns == null || columns == '') columns = '0';
 
-    final res = await http.post(Globals.host + '/xml/' + topologyType,
+    String rows = _rowsController.text;
+    if (rows == null || rows == '') rows = '0';
+
+    String nodes = _nodeController.text;
+    if (nodes == null || nodes == '') nodes = '0';
+
+    String firstStep = _firstStepController.text;
+    if (firstStep == null || firstStep == '') firstStep = '0';
+
+    String secondStep = _secondStepController.text;
+    if (secondStep == null || secondStep == '') secondStep = '0';
+
+    final res = await http.post(Globals.host + '/simulator/' + topologyType,
         headers: {
           'Accept': 'application/json; charset=utf-8',
           'Content-Type': 'application/json; charset=utf-8'
@@ -328,14 +455,15 @@ class _SimulatorPageState extends State<SimulatorPage> {
           'destInjectionRate': double.parse(destInjectionRate),
           'columns': int.parse(columns),
           'rows': int.parse(rows),
-          'nodes': int.parse(nodes)
+          'nodes': int.parse(nodes),
+          'firstStep': int.parse(firstStep),
+          'secondStep': int.parse(secondStep)
         }));
 
     if (res.statusCode == 200) {
       var v = json.decode(res.body);
-      setState(() {
-        _resultController.text = v['content'];
-      });
+      _resultController.text = v['content'];
+      progressVisible = false;
     }
   }
 }
