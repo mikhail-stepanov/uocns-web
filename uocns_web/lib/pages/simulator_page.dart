@@ -101,7 +101,8 @@ class _SimulatorPageState extends State<SimulatorPage> {
                                     opaque: false,
                                     pageBuilder:
                                         (BuildContext context, _, __) =>
-                                        InfoPopup()));                          },
+                                            InfoPopup()));
+                          },
                           child: Text(
                             'parameters guide',
                             style: TextStyle(
@@ -463,7 +464,9 @@ class _SimulatorPageState extends State<SimulatorPage> {
     if (res.statusCode == 200) {
       var v = json.decode(res.body);
       _resultController.text = v['content'];
-      progressVisible = false;
+      setState(() {
+        progressVisible = false;
+      });
     }
   }
 }
